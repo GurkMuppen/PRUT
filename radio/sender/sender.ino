@@ -81,7 +81,7 @@
 */
 
 // Change to 434.0 or other frequency, must match RX's freq!
-#define RF95_FREQ 470.0
+#define RF95_FREQ 420.0
 
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
@@ -91,8 +91,8 @@ void setup() {
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  while (!Serial) delay(1);
-  delay(100);
+  //while (!Serial) delay(1);
+  //delay(100);
 
   Serial.println("Feather LoRa TX Test!");
 
@@ -130,14 +130,11 @@ void loop() {
   delay(35); // Wait 1 second between transmits, could also 'sleep' here!
   Serial.println("Transmitting..."); // Send a message to rf95_server
 
-  char radiopacket[20] = "Joel Biden";
-  itoa(packetnum++, radiopacket+13, 10);
+  char radiopacket[30] = "Saftey Parachute Overide";
   Serial.print("Sending "); Serial.println(radiopacket);
-  radiopacket[19] = 0;
-
   Serial.println("Sending...");
   delay(10);
-  rf95.send((uint8_t *)radiopacket, 20);
+  rf95.send((uint8_t *)radiopacket, 30);
 
   Serial.println("Waiting for packet to complete...");
   delay(10);
