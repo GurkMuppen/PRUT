@@ -9,6 +9,8 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 
+
+
 // First 3 here are boards w/radio BUILT-IN. Boards using FeatherWing follow.
 #if defined (ARDUINO_SAMD_MKRZERO)  // Feather 32u4 w/Radio
   #define RFM95_CS    4
@@ -92,7 +94,7 @@ void setup() {
 
   Serial.begin(115200);
   //while (!Serial) delay(1);
-  //delay(100);
+  delay(100);
 
   Serial.println("Feather LoRa TX Test!");
 
