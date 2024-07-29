@@ -40,6 +40,7 @@ Servo servo2;
 
 int armPin = 0;
 int armLed = 1;
+int readyLed = 2;
 bool armed;
 
 
@@ -62,20 +63,12 @@ void setup() {
   /* SET PRESSURE SAMPLING*/
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                   Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
-                  Adafruit_BMP280::SAMPLING_X1,    /* Pressure oversampling */
-                  Adafruit_BMP280::FILTER_X2,      /* Filtering. */
+                  Adafruit_BMP280::SAMPLING_X4,    /* Pressure oversampling */
+                  Adafruit_BMP280::FILTER_X4,      /* Filtering. */
                   Adafruit_BMP280::STANDBY_MS_125); /* Standby time. */
 
 
-  //calibrate 
-  float calibrationHeight = 0;
-
-  for (int i = 0; i < 10; i++){
-    calibrationHeight += bmp.readAltitude(lokaltlufttryck);
-    delay(150);
-  }
-
-  startAltitude = calibrationHeight / 10;
+  calibrateAltitude();
 
   // INIT SERVOS & ARMING SYSTEMS 
   armed = false;
@@ -86,6 +79,8 @@ void setup() {
 
   pinMode(armPin, INPUT);
   pinMode(armLed, OUTPUT);
+  pinMode(readyLed, OUTPUT);
+  digitalWrite(readyLed, HIGH);
 }
 
 void loop() {
@@ -109,7 +104,9 @@ void loop() {
   // GROUND ARMING
   if (digitalRead(armPin) == LOW)
   {
+    calibrateAltitude();
     armed = true;
+    digitalWrite(readyLed, LOW);
   }
 
   //FLASH ARMING LED
@@ -133,6 +130,7 @@ void loop() {
     Serial.println("RELEASE CHUTE");
     parachuteRelease();
   }
+  delay(100);
 }
 
 void parachuteRelease()
@@ -141,4 +139,17 @@ void parachuteRelease()
   servo2.write(180);
   armed = false;
   digitalWrite(armLed, HIGH);
+}
+
+void calibrateAltitude()
+{
+  //calibrate 
+  float calibrationHeight = 0;
+
+  for (int i = 0; i < 10; i++){
+    calibrationHeight += bmp.readAltitude(lokaltlufttryck);
+    delay(300);
+  }
+
+  startAltitude = calibrationHeight / 10;
 }
