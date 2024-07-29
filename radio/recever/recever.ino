@@ -9,6 +9,10 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 
+#define RFM95_CS    4
+#define RFM95_INT   5
+#define RFM95_RST   6
+
 // First 3 here are boards w/radio BUILT-IN. Boards using FeatherWing follow.
 #if defined (ARDUINO_SAMD_MKRZERO)  // Feather 32u4 w/Radio
   #define RFM95_CS    4
@@ -143,7 +147,7 @@ void listenForSafteyMessage() {
       digitalWrite(LED_BUILTIN, HIGH);
       RH_RF95::printBuffer("Received: ", buf, len);
       Serial.print("Got: ");
-      //Serial.println((char*)buf);
+      Serial.println((char*)buf);
       if(strcmp((char*)buf,"Saftey Parachute Overide")==0)
         {
           deploy = true;
