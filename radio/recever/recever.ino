@@ -10,10 +10,10 @@
 #include <RH_RF95.h>
 
 // First 3 here are boards w/radio BUILT-IN. Boards using FeatherWing follow.
-#if defined (__AVR_ATmega32U4__)  // Feather 32u4 w/Radio
-  #define RFM95_CS    8
-  #define RFM95_INT   7
-  #define RFM95_RST   4
+#if defined (ARDUINO_SAMD_MKRZERO)  // Feather 32u4 w/Radio
+  #define RFM95_CS    4
+  #define RFM95_INT   5
+  #define RFM95_RST   6
 
 #elif defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)  // Feather M0 w/Radio
   #define RFM95_CS    8
@@ -25,11 +25,10 @@
   #define RFM95_INT  21
   #define RFM95_RST  17
 
-#elif defined (__AVR_ATmega328P__)  // Feather 328P w/wing
-  #define RFM95_CS    4  //
-  #define RFM95_INT   3  //
-  #define RFM95_RST   2  // "A"
-
+#el#if defined (adad)  // Feather 32u4 w/Radio
+  #define RFM95_CS    4
+  #define RFM95_INT   5
+  #define RFM95_RST   6
 #elif defined(ESP8266)  // ESP8266 feather w/wing
   #define RFM95_CS    2  // "E"
   #define RFM95_INT  15  // "B"
@@ -92,8 +91,8 @@ void setup() {
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(115200);
-  while (!Serial) delay(1);
-  delay(100);
+  //while (!Serial) delay(1);
+  //delay(100);
 
   Serial.println("Feather LoRa RX Test!");
 
@@ -125,28 +124,55 @@ void setup() {
   rf95.setTxPower(23, false);
 }
 
-void loop() {
-  if (rf95.available()) {
+bool deploy = false;
+
+void depoyChute(){
+
+}
+
+void listenForSafteyMessage() {
+  if (rf95.available() && !deploy) {
+
     // Should be a message for us now
-    uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    int custombufsize = 128;
+    //uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t buf[custombufsize];
     uint8_t len = sizeof(buf);
 
     if (rf95.recv(buf, &len)) {
       digitalWrite(LED_BUILTIN, HIGH);
       RH_RF95::printBuffer("Received: ", buf, len);
       Serial.print("Got: ");
-      Serial.println((char*)buf);
+      //Serial.println((char*)buf);
+      if(strcmp((char*)buf,"Saftey Parachute Overide")==0)
+        {
+          deploy = true;
+          deployChute();
+        }
        Serial.print("RSSI: ");
       Serial.println(rf95.lastRssi(), DEC);
 
-      // Send a reply
-      uint8_t data[] = "And hello back to you";
-      rf95.send(data, sizeof(data));
-      rf95.waitPacketSent();
-      Serial.println("Sent a reply");
-      digitalWrite(LED_BUILTIN, LOW);
+
+    
     } else {
       Serial.println("Receive failed");
     }
   }
+  else {
+
+  }
+
+}
+
+void loop(){
+
+  listenForSafteyMessage();
+}
+
+void deployChute(){
+
+  //temporary code, change later
+  int ledpinforchutedeployed = 3;
+  pinMode(ledpinforchutedeployed, OUTPUT);
+  digitalWrite(ledpinforchutedeployed,HIGH);
 }
