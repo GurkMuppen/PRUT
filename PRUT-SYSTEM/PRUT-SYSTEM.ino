@@ -43,7 +43,7 @@ Servo servo2;
 int armLed = 1;
 int standbyLed = 0;
 bool armed;
-bool useSdCard = false;
+bool useSdCard = true;
 
 
 void setup() {
@@ -193,7 +193,6 @@ void loop() {
   {
     logMessage("",true);
   }
-  delay(100);
 }
 
 void parachuteRelease() {
