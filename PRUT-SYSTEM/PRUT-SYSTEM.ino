@@ -7,13 +7,13 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_ADXL345_U.h>
 #include <iostream>
+#include <RH_RF95.h>
 using namespace std; 
 
 // radio pinouts, can be changed
-#if defined (ARDUINO_SAMD_MKRZERO) 
-  #define RFM95_CS    4
-  #define RFM95_INT   5
-  #define RFM95_RST   6
+#define RFM95_CS    4
+#define RFM95_INT   5
+#define RFM95_RST   6
 
 // radio frequenzy
 #define RF95_FREQ 420.0
@@ -70,6 +70,22 @@ void setup() {
   unsigned status;
   //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
 
+  //kollar då radio fungerar
+  while (!rf95.init()) {
+    Serial.println("LoRa radio init failed");
+    Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
+    while (1);
+  }
+  //sätter frequens
+  if (!rf95.setFrequency(RF95_FREQ)) {
+    Serial.println("setFrequency failed");
+    while (1);
+  }
+  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
+
+  //sätter signalstyrka för radio
+  rf95.setTxPower(23, false);
+
   if (useSdCard) {
     Serial.print("Initializing SD card...");
     if (!SD.begin(chipSelect)) {
@@ -125,6 +141,9 @@ void setup() {
 
 void loop() {
 
+  listenForSafteyMessage();
+
+
   /*Serial.print(F("Temperature = "));
   Serial.print(bmp.readTemperature());
   Serial.println(" *C");
@@ -150,9 +169,9 @@ void loop() {
   float accy = event.acceleration.y;
   float accz = event.acceleration.z;
   //logging accelerationdata for x,y and z
-  logMessage(accx, false);
-  logMessage(accy, false);
-  logMessage(accz, false);
+  logMessage(String(accx), false);
+  logMessage(String(accy), false);
+  logMessage(String(accz), false);
 
 
   
@@ -197,6 +216,40 @@ void calibrateAltitude() {
 
   startAltitude = calibrationHeight / 10;
 }
+
+void listenForSafteyMessage() {
+  if (rf95.available()) {
+
+    // Should be a message for us now
+    int custombufsize = 128;
+    //uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t buf[custombufsize];
+    uint8_t len = sizeof(buf);
+
+    if (rf95.recv(buf, &len)) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      RH_RF95::printBuffer("Received: ", buf, len);
+      Serial.print("Got: ");
+      Serial.println((char*)buf);
+      if(strcmp((char*)buf,"Saftey Parachute Overide")==0)
+        {
+          parachuteRelease();
+        }
+       Serial.print("RSSI: ");
+      Serial.println(rf95.lastRssi(), DEC);
+
+
+    
+    } else {
+      Serial.println("Receive failed");
+    }
+  }
+  else {
+
+  }
+
+}
+
 
 void logMessage(String logText, bool newLine) {
   if (useSdCard) {
