@@ -41,9 +41,8 @@ float upperReleaseThreshold = 2;
 Servo servo1;
 Servo servo2;
 
-int armPin = 0;
 int armLed = 1;
-int standbyLed = 2;
+int standbyLed = 0;
 bool armed;
 bool useSdCard = false;
 
@@ -56,8 +55,8 @@ void setup() {
 
   Serial.begin(9600);
   delay(3000);
-  /*
-    // HARD RESET RADIO
+  
+  // HARD RESET RADIO
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
   digitalWrite(RFM95_RST, LOW);
@@ -79,7 +78,7 @@ void setup() {
   Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
 
   // SET RADIO SIGNAL POWER
-  rf95.setTxPower(23, false);*/
+  rf95.setTxPower(23, false);
 
   // INIT SD-CARD
   if (useSdCard) {
@@ -120,12 +119,11 @@ void setup() {
 
   // INIT SERVOS & ARMING SYSTEMS
   armed = false;
-  servo1.attach(6);
-  servo2.attach(7);
+  servo1.attach(2);
+  servo2.attach(3);
   servo1.write(0);
   servo2.write(0);
 
-  pinMode(armPin, INPUT);
   pinMode(armLed, OUTPUT);
 
   // ARM SYSTEM 
@@ -135,8 +133,12 @@ void setup() {
 }
 
 void loop() {
-
-  listenForSafteyMessage();
+  
+  if (armed)
+  {
+    listenForSafteyMessage();
+  }
+  
 
   // FLASH ARMING LED
   if (armed == true && millis() % 1000 > 500) {
@@ -152,17 +154,13 @@ void loop() {
   sendRadioMessage("Altitude: " + String(altitude));
 
   // LOG TIME
-<<<<<<< Updated upstream
-  logMessage(millis() / 1000.0, false)
-
-  // LOG BMP 
-  logMessage(String(altitude),false);)
-=======
   logMessage(String(millis()), false);
 
   // LOG BMP 
   logMessage(String(altitude),false);
->>>>>>> Stashed changes
+
+  // LOG BMP 
+  logMessage(String(altitude),false);
   logMessage(String(bmp.readTemperature()),false);
   logMessage(String(bmp.readPressure() / 1000.0),false);
 
@@ -175,8 +173,6 @@ void loop() {
   logMessage(String(accx), false);
   logMessage(String(accy), false);
   logMessage(String(accz), false);
-
-<<<<<<< Updated upstream
   // END LINE
 
   // FLASH ARMING LED
@@ -187,9 +183,6 @@ void loop() {
   }
 
   // ALTITUDE RELEASE SYSTEM
-=======
-
->>>>>>> Stashed changes
   if (maxAltitude < altitude) {
     maxAltitude = altitude;
   }
