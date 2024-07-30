@@ -45,7 +45,7 @@ int armPin = 0;
 int armLed = 1;
 int standbyLed = 2;
 bool armed;
-bool useSdCard = true;
+bool useSdCard = false;
 
 
 void setup() {
@@ -56,43 +56,6 @@ void setup() {
 
   Serial.begin(9600);
   delay(1000);
-
-  // HARD RESET RADIO
-  pinMode(RFM95_RST, OUTPUT);
-  digitalWrite(RFM95_RST, HIGH);
-  digitalWrite(RFM95_RST, LOW);
-  delay(10);
-  digitalWrite(RFM95_RST, HIGH);
-  delay(10);
-
-  
-  // INIT RADIO
-  while (!rf95.init()) {
-    Serial.println("LoRa radio init failed");
-    Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
-    while (1);
-  }
-  // SET RADIO FREQUENCY
-  if (!rf95.setFrequency(RF95_FREQ)) {
-    Serial.println("setFrequency failed");
-    while (1);
-  }
-  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
-
-  // SET RADIO SIGNAL POWER
-  rf95.setTxPower(23, false);
-
-  // INIT SD-CARD
-  if (useSdCard) {
-    Serial.print("Initializing SD card...");
-    if (!SD.begin(chipSelect)) {
-      Serial.println("Card failed, or not present");
-      // Don't do anything more:
-      while (1)
-        ;
-    }
-    Serial.println("card initialized.");
-  }
 
   // INIT PRESSURE SENSOR
   unsigned status = bmp.begin();
@@ -139,7 +102,6 @@ void loop() {
 
   listenForSafteyMessage();
 
-
   /*Serial.print(F("Temperature = "));
   Serial.print(bmp.readTemperature());
   Serial.println(" *C");
@@ -168,10 +130,6 @@ void loop() {
   logMessage(String(accx), false);
   logMessage(String(accy), false);
   logMessage(String(accz), false);
-
-
-  
-
 
   logMessage("",true);
 
