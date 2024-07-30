@@ -6,6 +6,8 @@
 #include <SD.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_ADXL345_U.h>
+#include <iostream>
+using namespace std; 
 
 #define BMP_SCK (13)
 #define BMP_MISO (12)
@@ -54,9 +56,9 @@ void setup() {
   status = bmp.begin();
 
   if (!status) {
-    Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
-                     "try a different address!"));
-    Serial.print("SensorID was: 0x");
+    logMessage(F("Could not find a valid BMP280 sensor, check wiring or "
+                     "try a different address!"),true);
+    logMessage("SensorID was: 0x",false);
     Serial.println(bmp.sensorID(), 16);
     while (1) delay(10);
   }
@@ -85,22 +87,22 @@ void setup() {
 }
 
 void loop() {
-  Serial.print(F("Temperature = "));
-  Serial.print(bmp.readTemperature());
-  Serial.println(" *C");
+  logMessage(F("Temperature = "),false);
+  logMessage(String(bmp.readTemperature()),false);
+  logMessage(" *C",true);
 
-  Serial.print(F("Pressure = "));
-  Serial.print(bmp.readPressure());
-  Serial.println(" Pa");
+  logMessage(F("Pressure = "),false);
+  logMessage(String(bmp.readPressure()),false);
+  logMessage(" Pa",false);
 
   float altitude = bmp.readAltitude(lokaltlufttryck) - startAltitude;
 
-  Serial.print(F("Approx altitude = "));
-  Serial.print(altitude); /* Adjusted to local forecast! */
-  Serial.println(" m");
+  logMessage(F("Approx altitude = "),false);
+  logMessage(String(altitude),false); /* Adjusted to local forecast! */
+  logMessage(" m",true);
 
 
-  Serial.println();
+  logMessage("",true);
 
   // GROUND ARMING
   if (digitalRead(armPin) == LOW) {
@@ -122,7 +124,7 @@ void loop() {
   }
 
   if (maxAltitude - altitude > upperReleaseThreshold && armed == true) {
-    Serial.println("RELEASE CHUTE");
+    logMessage("RELEASE CHUTE",true);
     parachuteRelease();
   }
   delay(100);
@@ -150,7 +152,9 @@ void calibrateAltitude() {
 void logMessage(String logText, bool newLine) {
   if (useSdCard) {
     File dataFile = SD.open("datalog.csv", FILE_WRITE);
-
+    if (!dataFile){
+      Serial.println("something very wrong with sd card");
+    }
     if (newLine) {
       Serial.println(logText);
       dataFile.println(logText);
