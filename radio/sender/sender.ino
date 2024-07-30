@@ -128,14 +128,73 @@ void setup() {
 
 int16_t packetnum = 0;  // packet counter, we increment per xmission
 
-bool safteyOveride = true;
+bool safteyOveride = false;
 
 void loop() {
+    recvOneChar();
+    showNewData();
 
+  listenForSafteyMessage();
   if(safteyOveride)
   {
     sendSafteyOverideMessage();
   }
+}
+
+void listenForSafteyMessage() {
+  if (rf95.available()) {
+
+    // Should be a message for us now
+    int custombufsize = 128;
+    //uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+    uint8_t buf[custombufsize];
+    uint8_t len = sizeof(buf);
+
+    if (rf95.recv(buf, &len)) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      RH_RF95::printBuffer("Received: ", buf, len);
+      Serial.print("Got: ");
+      Serial.println((char*)buf);
+      if(strcmp((char*)buf,"Saftey Parachute Overide")==0)
+        {
+          sendSafteyOverideMessage();
+        }
+       Serial.print("RSSI: ");
+      Serial.println(rf95.lastRssi(), DEC);
+
+
+    
+    } else {
+      Serial.println("Receive failed");
+    }
+  }
+  else {
+
+  }
+
+}
+
+char receivedChar;
+boolean newData = false;
+
+void recvOneChar() {
+    if (Serial.available() > 0) {
+        receivedChar = Serial.read();
+        newData = true;
+    }
+}
+
+void showNewData() {
+    if (newData == true) {
+        Serial.print("This just in ... ");
+        if (receivedChar == 'p')
+        {
+        Serial.println(receivedChar);
+        safteyOveride = true;
+
+        }
+        newData = false;
+    }
 }
 
 void sendSafteyOverideMessage(){
