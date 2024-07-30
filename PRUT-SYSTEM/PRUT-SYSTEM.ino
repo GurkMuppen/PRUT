@@ -6,15 +6,13 @@
 #include <SD.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_ADXL345_U.h>
-#include <iostream>
-#include <RH_RF95.h>
-using namespace std; 
+#include <RH_RF95.h> 
 
+
+// RADIO SETTINGS
 #define RFM95_CS    4
 #define RFM95_INT   5
 #define RFM95_RST   6
-
-// radio frequenzy
 #define RF95_FREQ 420.0
 
 // PRESSURE SENSOR PINOUTS
