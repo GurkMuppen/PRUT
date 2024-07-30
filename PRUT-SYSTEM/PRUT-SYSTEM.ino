@@ -9,6 +9,15 @@
 #include <iostream>
 using namespace std; 
 
+// radio pinouts, can be changed
+#if defined (ARDUINO_SAMD_MKRZERO) 
+  #define RFM95_CS    4
+  #define RFM95_INT   5
+  #define RFM95_RST   6
+
+// radio frequenzy
+#define RF95_FREQ 420.0
+
 // PRESSURE SENSOR PINOUTS
 #define BMP_SCK (13)
 #define BMP_MISO (12)
@@ -16,7 +25,12 @@ using namespace std;
 #define BMP_CS (10)
 
 const int chipSelect = SDCARD_SS_PIN;
+
+
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
+
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
 Adafruit_BMP280 bmp;  // I2C
 //Adafruit_BMP280 bmp(BMP_CS); // hardware SPI
 //Adafruit_BMP280 bmp(BMP_CS, BMP_MOSI, BMP_MISO,  BMP_SCK);
@@ -41,10 +55,18 @@ void setup() {
 
   pinMode(standbyLed, OUTPUT);
   digitalWrite(standbyLed, HIGH);
+  //radio pin
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
+  //radio saker
+  // manual reset
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
 
   Serial.begin(9600);
   delay(1000);
-  Serial.println(F("BMP280 test"));
   unsigned status;
   //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
 
@@ -64,6 +86,8 @@ void setup() {
     Serial.println("Ingen ADXL345 kunde detekteras... Kontrollera dina kopplingar!");
     while (1);
   }
+
+  accel.setRange(ADXL345_RANGE_4_G);
 
   if (!status) {
     logMessage(F("Could not find a valid BMP280 sensor, check wiring or "
@@ -100,6 +124,7 @@ void setup() {
 }
 
 void loop() {
+
   /*Serial.print(F("Temperature = "));
   Serial.print(bmp.readTemperature());
   Serial.println(" *C");
@@ -110,19 +135,25 @@ void loop() {
 
   float altitude = bmp.readAltitude(lokaltlufttryck) - startAltitude;
 
-  logMessage(F("Approx altitude = "),false);
-  logMessage(String(altitude),false); /* Adjusted to local forecast! */
-  logMessage(" m",true);
 
-  logMessage(F("Temperature = "),false);
+  //altitude (meterd)
+  logMessage(String(altitude),false);
+  //temprature (degres celcius?)
   logMessage(String(bmp.readTemperature()),false);
-  logMessage(" *C",true);
-
-  logMessage(F("Pressure = "),false);
+  //pressure (kpa?)
   logMessage(String(bmp.readPressure()),false);
-  logMessage(" Pa",true);
 
-  
+  sensors_event_t event; 
+  accel.getEvent(&event);
+
+  float accx = event.acceleration.x;
+  float accy = event.acceleration.y;
+  float accz = event.acceleration.z;
+  //logging accelerationdata for x,y and z
+  logMessage(accx, false);
+  logMessage(accy, false);
+  logMessage(accz, false);
+
 
   
 
