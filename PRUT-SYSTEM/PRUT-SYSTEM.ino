@@ -149,6 +149,8 @@ void loop() {
 
   float altitude = bmp.readAltitude(lokaltlufttryck) - startAltitude;
 
+  sendRadioMessage("Altitude: " + String(altitude));
+
   // LOG TIME
 <<<<<<< Updated upstream
   logMessage(millis() / 1000.0, false)
@@ -219,6 +221,18 @@ void calibrateAltitude() {
   }
 
   startAltitude = calibrationHeight / 10;
+}
+
+void sendRadioMessage(String radioMessage){
+  
+  const char* radiopacket = radioMessage.c_str();
+
+  
+  rf95.send((uint8_t *)radiopacket, 30);
+
+  Serial.println("Waiting for packet to complete...");
+  rf95.waitPacketSent();
+  
 }
 
 void listenForSafteyMessage() {
