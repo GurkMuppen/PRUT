@@ -20,6 +20,7 @@
 #include <Servo.h>
 #include <Adafruit_BMP280.h>
 
+// PRESSURE SENSOR PINOUTS
 #define BMP_SCK  (13)
 #define BMP_MISO (12)
 #define BMP_MOSI (11)
@@ -32,7 +33,7 @@ Adafruit_BMP280 bmp; // I2C
 float lokaltlufttryck = 1013.25;
 float startAltitude = 0;
 float maxAltitude = 0;
-float upperReleaseThreshold = 1;
+float upperReleaseThreshold = 2;
 
 
 Servo servo1;
@@ -40,13 +41,17 @@ Servo servo2;
 
 int armPin = 0;
 int armLed = 1;
-int readyLed = 2;
+int standbyLed = 2;
 bool armed;
 
 
 void setup() {
+
+  pinMode(standbyLed, OUTPUT);
+  digitalWrite(standbyLed, HIGH);
+
   Serial.begin(9600);
-  while ( !Serial ) delay(100);   // wait for native usb
+  delay(1000);
   Serial.println(F("BMP280 test"));
   unsigned status;
   //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
@@ -63,9 +68,9 @@ void setup() {
   /* SET PRESSURE SAMPLING*/
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                   Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
-                  Adafruit_BMP280::SAMPLING_X4,    /* Pressure oversampling */
+                  Adafruit_BMP280::SAMPLING_X8,    /* Pressure oversampling */
                   Adafruit_BMP280::FILTER_X4,      /* Filtering. */
-                  Adafruit_BMP280::STANDBY_MS_125); /* Standby time. */
+                  Adafruit_BMP280::STANDBY_MS_63); /* Standby time. */
 
 
   calibrateAltitude();
@@ -79,18 +84,21 @@ void setup() {
 
   pinMode(armPin, INPUT);
   pinMode(armLed, OUTPUT);
-  pinMode(readyLed, OUTPUT);
-  digitalWrite(readyLed, HIGH);
+
+  // ARM SYSTEM 
+  calibrateAltitude();
+  armed = true;
+  digitalWrite(standbyLed, LOW);
 }
 
 void loop() {
-  Serial.print(F("Temperature = "));
+  /*Serial.print(F("Temperature = "));
   Serial.print(bmp.readTemperature());
   Serial.println(" *C");
 
   Serial.print(F("Pressure = "));
   Serial.print(bmp.readPressure());
-  Serial.println(" Pa");
+  Serial.println(" Pa");*/
 
   float altitude = bmp.readAltitude(lokaltlufttryck) - startAltitude;
 
@@ -100,14 +108,6 @@ void loop() {
 
 
   Serial.println();
-
-  // GROUND ARMING
-  if (digitalRead(armPin) == LOW)
-  {
-    calibrateAltitude();
-    armed = true;
-    digitalWrite(readyLed, LOW);
-  }
 
   //FLASH ARMING LED
   if (armed == true && millis() % 1000 > 500)
