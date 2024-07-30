@@ -10,7 +10,6 @@
 #include <RH_RF95.h>
 using namespace std; 
 
-// radio pinouts, can be changed
 #define RFM95_CS    4
 #define RFM95_INT   5
 #define RFM95_RST   6
