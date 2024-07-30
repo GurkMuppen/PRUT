@@ -129,6 +129,8 @@ void setup() {
   calibrateAltitude();
   armed = true;
   digitalWrite(standbyLed, LOW);
+
+  logMessage("Time, height, temp, pressure, x, y, z", true);
 }
 
 void loop() {
