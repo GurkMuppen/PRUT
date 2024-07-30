@@ -87,19 +87,23 @@ void setup() {
 }
 
 void loop() {
+  float altitude = bmp.readAltitude(lokaltlufttryck) - startAltitude;
+
+  logMessage(F("Approx altitude = "),false);
+  logMessage(String(altitude),false); /* Adjusted to local forecast! */
+  logMessage(" m",true);
+
   logMessage(F("Temperature = "),false);
   logMessage(String(bmp.readTemperature()),false);
   logMessage(" *C",true);
 
   logMessage(F("Pressure = "),false);
   logMessage(String(bmp.readPressure()),false);
-  logMessage(" Pa",false);
+  logMessage(" Pa",true);
 
-  float altitude = bmp.readAltitude(lokaltlufttryck) - startAltitude;
+  
 
-  logMessage(F("Approx altitude = "),false);
-  logMessage(String(altitude),false); /* Adjusted to local forecast! */
-  logMessage(" m",true);
+  
 
 
   logMessage("",true);
