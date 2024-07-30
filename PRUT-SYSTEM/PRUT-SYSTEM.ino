@@ -15,7 +15,7 @@ using namespace std;
 #define BMP_CS (10)
 
 const int chipSelect = SDCARD_SS_PIN;
-
+Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 Adafruit_BMP280 bmp;  // I2C
 //Adafruit_BMP280 bmp(BMP_CS); // hardware SPI
 //Adafruit_BMP280 bmp(BMP_CS, BMP_MOSI, BMP_MISO,  BMP_SCK);
@@ -54,6 +54,11 @@ void setup() {
     Serial.println("card initialized.");
   }
   status = bmp.begin();
+
+  if (!accel.begin()) {
+    Serial.println("Ingen ADXL345 kunde detekteras... Kontrollera dina kopplingar!");
+    while (1);
+  }
 
   if (!status) {
     logMessage(F("Could not find a valid BMP280 sensor, check wiring or "
