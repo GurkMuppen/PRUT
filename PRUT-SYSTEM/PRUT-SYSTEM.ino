@@ -1,32 +1,23 @@
-/***************************************************************************
-  This is a library for the BMP280 humidity, temperature & pressure sensor
-
-  Designed specifically to work with the Adafruit BMP280 Breakout
-  ----> http://www.adafruit.com/products/2651
-
-  These sensors use I2C or SPI to communicate, 2 or 4 pins are required
-  to interface.
-
-  Adafruit invests time and resources providing this open source code,
-  please support Adafruit andopen-source hardware by purchasing products
-  from Adafruit!
-
-  Written by Limor Fried & Kevin Townsend for Adafruit Industries.
-  BSD license, all text above must be included in any redistribution
- ***************************************************************************/
-
 #include <Wire.h>
 #include <SPI.h>
 #include <Servo.h>
 #include <Adafruit_BMP280.h>
+#include <string>
+#include <SD.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_ADXL345_U.h>
+#include <iostream>
+using namespace std; 
 
 // PRESSURE SENSOR PINOUTS
-#define BMP_SCK  (13)
+#define BMP_SCK (13)
 #define BMP_MISO (12)
 #define BMP_MOSI (11)
-#define BMP_CS   (10)
+#define BMP_CS (10)
 
-Adafruit_BMP280 bmp; // I2C
+const int chipSelect = SDCARD_SS_PIN;
+
+Adafruit_BMP280 bmp;  // I2C
 //Adafruit_BMP280 bmp(BMP_CS); // hardware SPI
 //Adafruit_BMP280 bmp(BMP_CS, BMP_MOSI, BMP_MISO,  BMP_SCK);
 
@@ -43,6 +34,7 @@ int armPin = 0;
 int armLed = 1;
 int standbyLed = 2;
 bool armed;
+bool useSdCard = true;
 
 
 void setup() {
@@ -56,12 +48,23 @@ void setup() {
   unsigned status;
   //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
 
+  if (useSdCard) {
+    Serial.print("Initializing SD card...");
+    if (!SD.begin(chipSelect)) {
+      Serial.println("Card failed, or not present");
+      // Don't do anything more:
+      while (1)
+        ;
+    }
+    Serial.println("card initialized.");
+  }
   status = bmp.begin();
 
   if (!status) {
-    Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
-                      "try a different address!"));
-    Serial.print("SensorID was: 0x"); Serial.println(bmp.sensorID(),16);
+    logMessage(F("Could not find a valid BMP280 sensor, check wiring or "
+                     "try a different address!"),true);
+    logMessage("SensorID was: 0x",false);
+    Serial.println(bmp.sensorID(), 16);
     while (1) delay(10);
   }
 
@@ -75,7 +78,7 @@ void setup() {
 
   calibrateAltitude();
 
-  // INIT SERVOS & ARMING SYSTEMS 
+  // INIT SERVOS & ARMING SYSTEMS
   armed = false;
   servo1.attach(6);
   servo2.attach(7);
@@ -102,54 +105,83 @@ void loop() {
 
   float altitude = bmp.readAltitude(lokaltlufttryck) - startAltitude;
 
-  Serial.print(F("Approx altitude = "));
-  Serial.print(altitude); /* Adjusted to local forecast! */
-  Serial.println(" m");
+  logMessage(F("Approx altitude = "),false);
+  logMessage(String(altitude),false); /* Adjusted to local forecast! */
+  logMessage(" m",true);
+
+  logMessage(F("Temperature = "),false);
+  logMessage(String(bmp.readTemperature()),false);
+  logMessage(" *C",true);
+
+  logMessage(F("Pressure = "),false);
+  logMessage(String(bmp.readPressure()),false);
+  logMessage(" Pa",true);
+
+  
+
+  
 
 
-  Serial.println();
+  logMessage("",true);
 
   //FLASH ARMING LED
-  if (armed == true && millis() % 1000 > 500)
-  {
+  if (armed == true && millis() % 1000 > 500) {
     digitalWrite(armLed, HIGH);
-  }
-  else
-  {
+  } else {
     digitalWrite(armLed, LOW);
   }
 
   // ALTITUDE RELEASE SYSTEM
-  if (maxAltitude < altitude)
-  {
+  if (maxAltitude < altitude) {
     maxAltitude = altitude;
   }
 
-  if (maxAltitude - altitude > upperReleaseThreshold && armed == true)
-  {
-    Serial.println("RELEASE CHUTE");
+  if (maxAltitude - altitude > upperReleaseThreshold && armed == true) {
+    logMessage("RELEASE CHUTE",true);
     parachuteRelease();
   }
   delay(100);
 }
 
-void parachuteRelease()
-{
+void parachuteRelease() {
   servo1.write(180);
   servo2.write(180);
   armed = false;
   digitalWrite(armLed, HIGH);
 }
 
-void calibrateAltitude()
-{
-  //calibrate 
+void calibrateAltitude() {
+  //calibrate
   float calibrationHeight = 0;
 
-  for (int i = 0; i < 10; i++){
+  for (int i = 0; i < 10; i++) {
     calibrationHeight += bmp.readAltitude(lokaltlufttryck);
     delay(300);
   }
 
   startAltitude = calibrationHeight / 10;
+}
+
+void logMessage(String logText, bool newLine) {
+  if (useSdCard) {
+    File dataFile = SD.open("datalog.csv", FILE_WRITE);
+    if (!dataFile){
+      Serial.println("something very wrong with sd card");
+    }
+    if (newLine) {
+      Serial.println(logText);
+      dataFile.println(logText);
+      dataFile.close();
+    } else {
+      Serial.print(logText);
+      dataFile.print(logText);
+      dataFile.close();
+    }
+  } else {
+    if (newLine) {
+      Serial.println(logText);
+    } else {
+      Serial.print(logText);
+    }
+  }
 }
