@@ -35,8 +35,7 @@ Adafruit_BMP280 bmp;  // I2C
 float lokaltlufttryck = 1013.25;
 float startAltitude = 0;
 float maxAltitude = 0;
-float upperReleaseThreshold = 2;
-
+float upperReleaseThreshold = 4;
 
 Servo servo1;
 Servo servo2;
@@ -151,8 +150,6 @@ void loop() {
 
   float altitude = bmp.readAltitude(lokaltlufttryck) - startAltitude;
 
-  sendRadioMessage("Altitude: " + String(altitude));
-
   // LOG TIME
   logMessage(String(millis()), false);
 
@@ -214,18 +211,6 @@ void calibrateAltitude() {
   }
 
   startAltitude = calibrationHeight / 10;
-}
-
-void sendRadioMessage(String radioMessage){
-  
-  const char* radiopacket = radioMessage.c_str();
-
-  
-  rf95.send((uint8_t *)radiopacket, 30);
-
-  Serial.println("Waiting for packet to complete...");
-  rf95.waitPacketSent();
-  
 }
 
 void listenForSafteyMessage() {
