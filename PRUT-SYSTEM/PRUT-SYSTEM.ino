@@ -73,7 +73,7 @@ void setup() {
     Serial.println("Ingen ADXL345 kunde detekteras... Kontrollera dina kopplingar!");
     while (1);
   }
-  accel.setRange(ADXL345_RANGE_4_G)
+  accel.setRange(ADXL345_RANGE_4_G);
 
   // SET BMP SETTINGS
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
@@ -112,28 +112,27 @@ void loop() {
 
   float altitude = bmp.readAltitude(lokaltlufttryck) - startAltitude;
 
+  // LOG TIME
+  logMessage(millis() / 1000.0, false)
 
-  //altitude (meterd)
-  logMessage(String(altitude),false);
-  //temprature (degres celcius?)
+  // LOG BMP 
+  logMessage(String(altitude),false);)
   logMessage(String(bmp.readTemperature()),false);
-  //pressure (kpa?)
-  logMessage(String(bmp.readPressure()),false);
+  logMessage(String(bmp.readPressure() / 1000.0),false);
 
+  // LOG ACCELERATION
   sensors_event_t event; 
   accel.getEvent(&event);
-
   float accx = event.acceleration.x;
   float accy = event.acceleration.y;
   float accz = event.acceleration.z;
-  //logging accelerationdata for x,y and z
   logMessage(String(accx), false);
   logMessage(String(accy), false);
   logMessage(String(accz), false);
 
-  logMessage("",true);
+  // END LINE
 
-  //FLASH ARMING LED
+  // FLASH ARMING LED
   if (armed == true && millis() % 1000 > 500) {
     digitalWrite(armLed, HIGH);
   } else {
@@ -144,10 +143,13 @@ void loop() {
   if (maxAltitude < altitude) {
     maxAltitude = altitude;
   }
-
   if (maxAltitude - altitude > upperReleaseThreshold && armed == true) {
-    logMessage("RELEASE CHUTE",true);
+    logMessage("ALTITUDE TRIGGER - PARACHUTE RELEASED",true);
     parachuteRelease();
+  }
+  else
+  {
+    logMessage("",true);
   }
   delay(100);
 }
@@ -216,15 +218,15 @@ void logMessage(String logText, bool newLine) {
       dataFile.println(logText);
       dataFile.close();
     } else {
-      Serial.print(logText);
-      dataFile.print(logText);
+      Serial.print(logText + ", ");
+      dataFile.print(logText + ", ");
       dataFile.close();
     }
   } else {
     if (newLine) {
       Serial.println(logText);
     } else {
-      Serial.print(logText);
+      Serial.print(logText + ", ");
     }
   }
 }
