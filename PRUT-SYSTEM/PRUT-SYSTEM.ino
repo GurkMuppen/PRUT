@@ -50,39 +50,39 @@ bool useSdCard = true;
 
 void setup() {
 
+  // PRIMARY SETUP
   pinMode(standbyLed, OUTPUT);
   digitalWrite(standbyLed, HIGH);
-  //radio pin
+
+  Serial.begin(9600);
+  delay(1000);
+
+  // HARD RESET RADIO
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
-  //radio saker
-  // manual reset
   digitalWrite(RFM95_RST, LOW);
   delay(10);
   digitalWrite(RFM95_RST, HIGH);
   delay(10);
 
-  Serial.begin(9600);
-  delay(1000);
-  unsigned status;
-  //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
-
-  //kollar då radio fungerar
+  
+  // INIT RADIO
   while (!rf95.init()) {
     Serial.println("LoRa radio init failed");
     Serial.println("Uncomment '#define SERIAL_DEBUG' in RH_RF95.cpp for detailed debug info");
     while (1);
   }
-  //sätter frequens
+  // SET RADIO FREQUENCY
   if (!rf95.setFrequency(RF95_FREQ)) {
     Serial.println("setFrequency failed");
     while (1);
   }
   Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
 
-  //sätter signalstyrka för radio
+  // SET RADIO SIGNAL POWER
   rf95.setTxPower(23, false);
 
+  // INIT SD-CARD
   if (useSdCard) {
     Serial.print("Initializing SD card...");
     if (!SD.begin(chipSelect)) {
@@ -93,15 +93,10 @@ void setup() {
     }
     Serial.println("card initialized.");
   }
-  status = bmp.begin();
 
-  if (!accel.begin()) {
-    Serial.println("Ingen ADXL345 kunde detekteras... Kontrollera dina kopplingar!");
-    while (1);
-  }
-
-  accel.setRange(ADXL345_RANGE_4_G);
-
+  // INIT PRESSURE SENSOR
+  unsigned status = bmp.begin();
+  //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
   if (!status) {
     logMessage(F("Could not find a valid BMP280 sensor, check wiring or "
                      "try a different address!"),true);
@@ -110,15 +105,19 @@ void setup() {
     while (1) delay(10);
   }
 
-  /* SET PRESSURE SAMPLING*/
+  // INIT ADXL345
+  if (!accel.begin()) {
+    Serial.println("Ingen ADXL345 kunde detekteras... Kontrollera dina kopplingar!");
+    while (1);
+  }
+  accel.setRange(ADXL345_RANGE_4_G)
+
+  // SET BMP SETTINGS
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                   Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                   Adafruit_BMP280::SAMPLING_X8,    /* Pressure oversampling */
                   Adafruit_BMP280::FILTER_X4,      /* Filtering. */
                   Adafruit_BMP280::STANDBY_MS_63); /* Standby time. */
-
-
-  calibrateAltitude();
 
   // INIT SERVOS & ARMING SYSTEMS
   armed = false;
