@@ -35,7 +35,7 @@ Adafruit_BMP280 bmp;  // I2C
 float lokaltlufttryck = 1013.25;
 float startAltitude = 0;
 float maxAltitude = 0;
-float upperReleaseThreshold = 4;
+float upperReleaseThreshold = 35;
 
 Servo servo1;
 Servo servo2;
